@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">What Me Do</string>
+    <string name="new_record_create">Создание новой записи</string>
+    <string name="ifrag_tag">tag</string>
+</resources>
