@@ -28,6 +28,8 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,15 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private FragmentManager mFragmentManager;
     private FragmentTransaction mFragmentTransaction;
     private Fragment inputfragment;
-    private DatabaseHelper databaseHelper;
 
     private void inflateListItems() {
-
-        //todo сделаем, чтобы весь лист читался из базы при получении фокуса, а сохранялся в базу при
-        //todo потере фокуса. Активно он должен находиться в массиве
-        databaseHelper = new DatabaseHelper(this);
-        listItems = databaseHelper.getTaskList();
-
+        listItems = new ArrayList<>();
+        listItems.add("Тестовая строка 1");
+        listItems.add("Тестовая строка 2");
+        listItems.add("Тестовая строка 3");
+        listItems.add("Тестовая строка 4");
+        listItems.add("Тестовая строка 5");
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listItems);
         tasklist = findViewById(R.id.added_tasks);
         tasklist.setAdapter(adapter);
@@ -107,14 +108,17 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.record_create_order) {
             if (inputfragment == null) inputfragment = new InputFragment();
 
-            if (!inputfragment.isAdded()) {
-                mFragmentTransaction = mFragmentManager.beginTransaction();
-                mFragmentTransaction.add(R.id.container, inputfragment, getString(R.string.ifrag_tag));
-                mFragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-                mFragmentTransaction.commit();
-                setFragmentListener();
-            }
+            mFragmentTransaction = mFragmentManager.beginTransaction();
+            mFragmentTransaction.add(R.id.container, inputfragment, getString(R.string.ifrag_tag));
+            mFragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            mFragmentTransaction.commit();
+
+            //Установим редактируемому тексту слушателя, для этого используем handler
+            //Если сразу пытаться задать слушателя, не успевает проходить транзакция
+            setFragmentListener();
+
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -139,11 +143,10 @@ public class MainActivity extends AppCompatActivity {
                                     if (event == null || !event.isShiftPressed()) {
                                         //Пользователь завершил ввод, можно закрывать фрагмент
                                         //Но сначала передадим введённую строку в список
-                                        String inputed = editText.getText().toString();
-                                        listItems.add(0, inputed);
+                                        listItems.add(0, editText.getText().toString());
                                         adapter.notifyDataSetChanged();
-
                                         editText.setText(""); //обнуляем текст фрагмента, сам фрагмент остаётся в памяти
+
                                         mFragmentTransaction = mFragmentManager.beginTransaction();
                                         mFragmentTransaction.remove(inputfragment);
                                         mFragmentTransaction.commit();
@@ -156,17 +159,5 @@ public class MainActivity extends AppCompatActivity {
                 );
             }
         }, 1000);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        databaseHelper.writeTaskList(listItems);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        databaseHelper.writeTaskList(listItems);
     }
 }
